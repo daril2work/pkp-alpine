@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifikasi PKP</title>
+<script src="/js/authGuard.js"></script>
+    <link href="styles.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div class="flex h-screen" x-data="{ sidebarOpen: true }">
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8 overflow-y-auto" x-data="verificationApp()">
+            <!-- Header -->
+            <div class="flex items-center mb-6">
+                <div class="bg-purple-600 text-white p-3 rounded-lg mr-4">
+                    <i class="far fa-check-circle fa-2x"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Verifikasi Laporan PKP</h1>
+                    <p class="text-gray-500">Review dan verifikasi data laporan dari Puskesmas.</p>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="tahun" class="text-sm font-medium text-gray-700">Tahun</label>
+                        <select id="tahun" x-model="selectedYear" @change="loadData" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                            <option>2024</option>
+                            <option>2025</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="puskesmas" class="text-sm font-medium text-gray-700">Puskesmas</label>
+                        <select id="puskesmas" x-model="selectedPuskesmas" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                            <option value="">Semua Puskesmas</option>
+                            <option>Puskesmas A</option>
+                            <option>Puskesmas B</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="indikator" class="text-sm font-medium text-gray-700">Indikator</label>
+                        <select id="indikator" x-model="selectedIndicator" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                            <option value="">Semua Indikator</option>
+                            <template x-for="indicator in allIndicators" :key="indicator">
+                                <option :value="indicator" x-text="indicator"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verification Data -->
+            <div x-show="reportData.length > 0" class="space-y-6">
+                <template x-for="report in filteredData" :key="report.id">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-xl font-bold mb-2" x-text="report.puskesmasName"></h2>
+                        <span class="text-sm font-medium" :class="report.status === 'Diverifikasi' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'" x-text="report.status"></span>
+                        
+                        <template x-for="cluster in report.clusters" :key="cluster.id">
+                            <div class="mt-4">
+                                <h3 class="text-lg font-semibold text-gray-800" x-text="cluster.name"></h3>
+                                <template x-for="indicator in cluster.indicators" :key="indicator.id">
+                                    <div class="border rounded-lg p-4 mt-2" x-data="{ activeQuarter: 'Q1' }">
+                                        <p class="font-semibold" x-text="indicator.name"></p>
+                                        
+                                        <!-- Quarterly Tabs -->
+                                        <div class="border-b border-gray-200 mt-4">
+                                            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                                                <button @click="activeQuarter = 'Q1'" :class="{'border-purple-500 text-purple-600': activeQuarter === 'Q1', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeQuarter !== 'Q1'}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Q1</button>
+                                                <button @click="activeQuarter = 'Q2'" :class="{'border-purple-500 text-purple-600': activeQuarter === 'Q2', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeQuarter !== 'Q2'}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Q2</button>
+                                                <button @click="activeQuarter = 'Q3'" :class="{'border-purple-500 text-purple-600': activeQuarter === 'Q3', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeQuarter !== 'Q3'}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Q3</button>
+                                                <button @click="activeQuarter = 'Q4'" :class="{'border-purple-500 text-purple-600': activeQuarter === 'Q4', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeQuarter !== 'Q4'}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Q4</button>
+                                            </nav>
+                                        </div>
+
+                                        <!-- Tab Content -->
+                                        <div class="mt-4">
+                                            <template x-for="quarter in ['Q1', 'Q2', 'Q3', 'Q4']" :key="quarter">
+                                                <div x-show="activeQuarter === quarter">
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                        <!-- Submitted Data -->
+                                                        <div class="p-4 bg-gray-50 rounded-lg">
+                                                            <h4 class="font-semibold text-gray-700">Data Entrian Puskesmas</h4>
+                                                            <table class="w-full mt-4 text-center">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <template x-for="month in quarterlyMonths[quarter]" :key="month">
+                                                                            <th class="pb-1 text-sm font-medium text-gray-700" x-text="month"></th>
+                                                                        </template>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <template x-for="(value, index) in indicator.evaluations[quarter].monthly_values" :key="index">
+                                                                            <td class="text-lg font-bold" x-text="value"></td>
+                                                                        </template>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                            <hr class="my-3">
+                                                            <p class="text-sm">Rata-rata/Total: <span class="font-bold text-lg" x-text="indicator.evaluations[quarter].value"></span></p>
+                                                            <p class="text-sm">Status Capaian: <span class="font-semibold" x-text="indicator.evaluations[quarter].status"></span></p>
+                                                        </div>
+                                                        <!-- Verification Controls -->
+                                                        <div class="p-4 rounded-lg" :class="getVerificationBorder(indicator.evaluations[quarter].verification_status)">
+                                                            <h4 class="font-semibold text-gray-700">Verifikasi Dinkes</h4>
+                                                            <div class="mt-4">
+                                                                <label class="block text-sm font-medium text-gray-600">Status Verifikasi</label>
+                                                                <select x-model="indicator.evaluations[quarter].verification_status" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                                                                    <option>Belum Diverifikasi</option>
+                                                                    <option>Diverifikasi</option>
+                                                                    <option>Ditolak</option>
+                                                                </select>
+                                                                <label class="mt-4 block text-sm font-medium text-gray-600">Catatan Verifikator</label>
+                                                                <textarea x-model="indicator.evaluations[quarter].verification_notes" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" rows="3" placeholder="Tambahkan catatan..."></textarea>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        <div class="flex justify-end mt-4">
+                            <button @click="saveVerification(report.id)" class="bg-purple-600 text-white px-4 py-2 rounded-md shadow-sm hover:bg-purple-700">
+                                <i class="fas fa-save mr-2"></i>Simpan Status Verifikasi
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+             <div x-show="filteredData.length === 0" class="text-center py-12">
+                <i class="fas fa-folder-open fa-3x text-gray-400"></i>
+                <p class="mt-4 text-gray-600">Tidak ada data untuk ditampilkan. Silakan ubah filter.</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function verificationApp() {
+            return {
+                selectedYear: '2025',
+                selectedPuskesmas: '',
+                selectedIndicator: '',
+                reportData: [],
+                quarterlyMonths: {
+                    Q1: ['Januari', 'Februari', 'Maret'],
+                    Q2: ['April', 'Mei', 'Juni'],
+                    Q3: ['Juli', 'Agustus', 'September'],
+                    Q4: ['Oktober', 'November', 'Desember']
+                },
+                get allIndicators() {
+                    const indicators = new Set();
+                    if (!this.reportData) return [];
+                    this.reportData.forEach(report => {
+                        report.clusters.forEach(cluster => {
+                            cluster.indicators.forEach(indicator => {
+                                indicators.add(indicator.name);
+                            });
+                        });
+                    });
+                    return Array.from(indicators);
+                },
+                get filteredData() {
+                    let data = this.reportData;
+
+                    if (this.selectedPuskesmas) {
+                        data = data.filter(r => r.puskesmasName === this.selectedPuskesmas);
+                    }
+
+                    if (this.selectedIndicator) {
+                        // Deep clone to avoid modifying the original data when filtering nested properties
+                        data = JSON.parse(JSON.stringify(data));
+                        
+                        data.forEach(report => {
+                            report.clusters.forEach(cluster => {
+                                cluster.indicators = cluster.indicators.filter(indicator => indicator.name === this.selectedIndicator);
+                            });
+                            // Filter out clusters that are now empty
+                            report.clusters = report.clusters.filter(cluster => cluster.indicators.length > 0);
+                        });
+                        
+                        // Filter out reports that are now empty
+                        data = data.filter(report => report.clusters.length > 0);
+                    }
+
+                    return data;
+                },
+                loadData() {
+                    // Mock data, replace with actual API call
+                    this.reportData = [
+                        {
+                            id: 1,
+                            puskesmasName: 'Puskesmas A',
+                            year: '2025',
+                            status: 'Menunggu Verifikasi',
+                            clusters: [
+                                {
+                                    id: 101, name: 'Manajemen Puskesmas',
+                                    indicators: [
+                                        {
+                                            id: 201, name: 'Kepatuhan Standar Pelayanan (Skor)',
+                                            evaluations: {
+                                                Q1: { monthly_values: [8, 9, 8], value: '8.33', status: 'Tercapai', verification_status: 'Belum Diverifikasi', verification_notes: '' },
+                                                Q2: { monthly_values: [9, 9, 10], value: '9.33', status: 'Tercapai', verification_status: 'Diverifikasi', verification_notes: 'Data sudah sesuai.' },
+                                                Q3: { monthly_values: [7, 8, 7], value: '7.33', status: 'Tercapai', verification_status: 'Ditolak', verification_notes: 'Mohon lampirkan bukti dukung untuk bulan Juli.' },
+                                                Q4: { monthly_values: [0, 0, 0], value: '0.00', status: 'Belum Diisi', verification_status: 'Belum Diverifikasi', verification_notes: '' }
+                                            }
+                                        },
+                                        {
+                                            id: 202, name: 'Cakupan Imunisasi Dasar Lengkap (Target)',
+                                            evaluations: {
+                                                Q1: { monthly_values: [20, 25, 22], value: '67', status: 'Tercapai', verification_status: 'Belum Diverifikasi', verification_notes: '' },
+                                                Q2: { monthly_values: [25, 25, 30], value: '80', status: 'Tercapai', verification_status: 'Belum Diverifikasi', verification_notes: '' },
+                                                Q3: { monthly_values: [0, 0, 0], value: '0', status: 'Belum Diisi', verification_status: 'Belum Diverifikasi', verification_notes: '' },
+                                                Q4: { monthly_values: [0, 0, 0], value: '0', status: 'Belum Diisi', verification_status: 'Belum Diverifikasi', verification_notes: '' }
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ];
+                },
+                getVerificationBorder(status) {
+                    switch(status) {
+                        case 'Diverifikasi': return 'bg-green-50 border-l-4 border-green-500';
+                        case 'Ditolak': return 'bg-red-50 border-l-4 border-red-500';
+                        default: return 'bg-white border-l-4 border-gray-300';
+                    }
+                },
+                saveVerification(reportId) {
+                    const report = this.reportData.find(r => r.id === reportId);
+                    alert('Status verifikasi untuk ' + report.puskesmasName + ' disimpan!\n' + JSON.stringify(report, null, 2));
+                },
+                init() {
+                    this.loadData();
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/components/_sidebar.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('sidebar-container').innerHTML = data;
+                });
+        });
+    </script>

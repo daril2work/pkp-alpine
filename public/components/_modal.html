@@ -1,0 +1,27 @@
+<!-- Modal -->
+<div x-data="{ modalOpen: false }" @keydown.escape.window="modalOpen = false" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div x-show="modalOpen" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
+    <div x-show="modalOpen" class="fixed inset-0 flex items-center justify-center p-4">
+        <div @click.away="modalOpen = false" class="relative bg-white rounded-lg shadow-xl max-w-lg w-full">
+            <!-- Modal Header -->
+            <div class="flex items-start justify-between p-4 border-b rounded-t">
+                <h3 class="text-xl font-semibold text-gray-900" id="modal-title">
+                    Modal Title
+                </h3>
+                <button @click="modalOpen = false" type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <!-- Modal Body -->
+            <div class="p-6 space-y-4" id="modal-body">
+                <p>Modal content goes here.</p>
+            </div>
+            <!-- Modal Footer -->
+            <div class="flex items-center p-6 space-x-2 border-t border-gray-200 rounded-b">
+                <button @click="modalOpen = false" type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">I accept</button>
+                <button @click="modalOpen = false" type="button" class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10">Decline</button>
+            </div>
+        </div>
+    </div>
+</div>

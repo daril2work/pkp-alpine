@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard PKP</title>
+<script src="/js/authGuard.js"></script>
+    <link href="styles.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div class="flex h-screen" x-data="{ sidebarOpen: true }">
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8 overflow-y-auto">
+            <!-- Header -->
+            <div class="flex items-center mb-6">
+                <div class="bg-purple-600 text-white p-3 rounded-lg mr-4">
+                    <i class="far fa-chart-bar fa-2x"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Dashboard PKP</h1>
+                    <p class="text-gray-500">Penilaian Kinerja Puskesmas</p>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Card 1: Total Bundle -->
+                <div class="bg-white p-6 rounded-xl shadow-sm flex justify-between items-start">
+                    <div>
+                        <p class="text-sm text-gray-500">Total Bundle</p>
+                        <p class="text-3xl font-bold text-gray-900">3</p>
+                        <p class="text-xs text-gray-400">Bundle aktif</p>
+                    </div>
+                    <i class="fas fa-clone text-gray-300"></i>
+                </div>
+
+                <!-- Card 2: Total Puskesmas -->
+                <div class="bg-white p-6 rounded-xl shadow-sm flex justify-between items-start">
+                    <div>
+                        <p class="text-sm text-gray-500">Total Puskesmas</p>
+                        <p class="text-3xl font-bold text-gray-900">24</p>
+                        <p class="text-xs text-gray-400">Terdaftar dalam sistem</p>
+                    </div>
+                    <i class="fas fa-building text-gray-300"></i>
+                </div>
+
+                <!-- Card 3: Evaluasi Selesai -->
+                <div class="bg-white p-6 rounded-xl shadow-sm flex justify-between items-start">
+                    <div>
+                        <p class="text-sm text-gray-500">Evaluasi Selesai</p>
+                        <p class="text-3xl font-bold text-gray-900">18</p>
+                        <p class="text-xs text-gray-400">dari 24 puskesmas</p>
+                    </div>
+                    <i class="far fa-check-circle text-green-500"></i>
+                </div>
+
+                <!-- Card 4: Perlu Validasi -->
+                <div class="bg-white p-6 rounded-xl shadow-sm flex justify-between items-start">
+                    <div>
+                        <p class="text-sm text-gray-500">Perlu Validasi</p>
+                        <p class="text-3xl font-bold text-gray-900">6</p>
+                        <p class="text-xs text-gray-400">Menunggu persetujuan</p>
+                    </div>
+                    <i class="far fa-info-circle text-yellow-500"></i>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm">
+                    <!-- Progress Card -->
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-chart-bar text-gray-500 mr-3"></i>
+                        <h2 class="text-xl font-bold text-gray-900">Progress Evaluasi per Quarter</h2>
+                    </div>
+                    <div class="space-y-4">
+                        <!-- Q1 2025 -->
+                        <div class="flex items-center">
+                            <i class="fas fa-calendar-alt text-gray-400 mr-3"></i>
+                            <span class="w-20 text-gray-600">Q1 2025</span>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5 mx-4">
+                                <div class="bg-gradient-to-r from-purple-400 to-indigo-500 h-2.5 rounded-full" style="width: 33%"></div>
+                            </div>
+                            <span class="w-12 text-sm text-gray-500">8/24</span>
+                            <span class="w-12 text-sm font-semibold text-gray-700 text-right">33%</span>
+                        </div>
+                        <!-- Q4 2024 -->
+                        <div class="flex items-center">
+                            <i class="fas fa-calendar-alt text-gray-400 mr-3"></i>
+                            <span class="w-20 text-gray-600">Q4 2024</span>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5 mx-4">
+                                <div class="bg-gradient-to-r from-indigo-500 to-blue-500 h-2.5 rounded-full" style="width: 100%"></div>
+                            </div>
+                            <span class="w-12 text-sm text-gray-500">24/24</span>
+                            <span class="w-12 text-sm font-bold text-white bg-gray-800 rounded-full px-2 py-0.5 text-center">100%</span>
+                        </div>
+                        <!-- Q3 2024 -->
+                        <div class="flex items-center">
+                            <i class="fas fa-calendar-alt text-gray-400 mr-3"></i>
+                            <span class="w-20 text-gray-600">Q3 2024</span>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5 mx-4">
+                                <div class="bg-gradient-to-r from-purple-500 to-indigo-600 h-2.5 rounded-full" style="width: 92%"></div>
+                            </div>
+                            <span class="w-12 text-sm text-gray-500">22/24</span>
+                            <span class="w-12 text-sm font-semibold text-gray-700 text-right">92%</span>
+                        </div>
+                        <!-- Q2 2024 -->
+                        <div class="flex items-center">
+                            <i class="fas fa-calendar-alt text-gray-400 mr-3"></i>
+                            <span class="w-20 text-gray-600">Q2 2024</span>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5 mx-4">
+                                <div class="bg-gradient-to-r from-blue-400 to-indigo-500 h-2.5 rounded-full" style="width: 83%"></div>
+                            </div>
+                            <span class="w-12 text-sm text-gray-500">20/24</span>
+                            <span class="w-12 text-sm font-semibold text-gray-700 text-right">83%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <!-- Activity Card -->
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-list-alt text-gray-500 mr-3"></i>
+                        <h2 class="text-xl font-bold text-gray-900">Aktivitas Terbaru</h2>
+                    </div>
+                    <div class="space-y-4">
+                        <!-- Activity 1 -->
+                        <div class="flex">
+                            <div class="w-4 h-4 bg-green-500 rounded-full mt-1 mr-.4 flex-shrink-0"></div>
+                            <div>
+                                <p class="text-gray-800">Bundle PKP 2025 dibuat</p>
+                                <p class="text-xs text-gray-400">2 jam yang lalu</p>
+                            </div>
+                        </div>
+                        <!-- Activity 2 -->
+                        <div class="flex">
+                            <div class="w-4 h-4 bg-blue-500 rounded-full mt-1 mr-4 flex-shrink-0"></div>
+                            <div>
+                                <p class="text-gray-800">Puskesmas Kec. Utara mengirim data Q1</p>
+                                <p class="text-xs text-gray-400">4 jam yang lalu</p>
+                            </div>
+                        </div>
+                        <!-- Activity 3 -->
+                        <div class="flex">
+                            <div class="w-4 h-4 bg-yellow-500 rounded-full mt-1 mr-4 flex-shrink-0"></div>
+                            <div>
+                                <p class="text-gray-800">Validasi data Puskesmas Kec. Selatan</p>
+                                <p class="text-xs text-gray-400">1 hari yang lalu</p>
+                            </div>
+                        </div>
+                        <!-- Activity 4 -->
+                        <div class="flex">
+                            <div class="w-4 h-4 bg-green-500 rounded-full mt-1 mr-4 flex-shrink-0"></div>
+                            <div>
+                                <p class="text-gray-800">Laporan rekap Q4 2024 selesai</p>
+                                <p class="text-xs text-gray-400">2 hari yang lalu</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/components/_sidebar.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('sidebar-container').innerHTML = data;
+                });
+        });
+    </script>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PKP Builder - Rekap</title>
+<script src="/js/authGuard.js"></script>
+    <link href="styles.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div class="flex h-screen" x-data="{ sidebarOpen: true }">
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8 overflow-y-auto" x-data="rekapApp()">
+            <!-- Header -->
+            <div class="flex items-center mb-6">
+                <div class="bg-purple-600 text-white p-3 rounded-lg mr-4">
+                    <i class="far fa-file-alt fa-2x"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Rekapitulasi PKP</h1>
+                    <p class="text-gray-500">Rekapitulasi Penilaian Kinerja Puskesmas</p>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white p-4 rounded shadow mb-4 flex space-x-4">
+            <select x-model="selectedBundle" class="border p-2 rounded">
+                <option value="">All Bundles</option>
+                <template x-for="bundle in bundles" :key="bundle.id">
+                    <option :value="bundle.id" x-text="bundle.name"></option>
+                </template>
+            </select>
+            <select x-model="selectedPuskesmas" class="border p-2 rounded">
+                <option value="">All Puskesmas</option>
+                <template x-for="puskesmas in puskesmasList" :key="puskesmas.id">
+                    <option :value="puskesmas.id" x-text="puskesmas.name"></option>
+                </template>
+            </select>
+        </div>
+
+        <!-- Rekap Table -->
+        <div class="bg-white p-4 rounded shadow">
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr>
+                        <th class="border p-2">Puskesmas</th>
+                        <th class="border p-2">Indicator</th>
+                        <th class="border p-2">Progress</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="item in filteredData" :key="item.id">
+                        <tr>
+                            <td class="border p-2" x-text="item.puskesmasName"></td>
+                            <td class="border p-2" x-text="item.indicatorName"></td>
+                            <td class="border p-2 text-center" :class="{'bg-green-200': item.progress >= 80, 'bg-yellow-200': item.progress < 80 && item.progress >= 50, 'bg-red-200': item.progress < 50}" x-text="item.progress + '%'"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+        </main>
+    </div>
+
+    <script>
+        function rekapApp() {
+            return {
+                selectedBundle: '',
+                selectedPuskesmas: '',
+                bundles: [
+                    { id: 1, name: 'PKP 2024' },
+                    { id: 2, name: 'PKP 2023' }
+                ],
+                puskesmasList: [
+                    { id: 1, name: 'Puskesmas A' },
+                    { id: 2, name: 'Puskesmas B' }
+                ],
+                data: [
+                    { id: 1, bundleId: 1, puskesmasId: 1, puskesmasName: 'Puskesmas A', indicatorName: 'Kehadiran', progress: 95 },
+                    { id: 2, bundleId: 1, puskesmasId: 1, puskesmasName: 'Puskesmas A', indicatorName: 'Cakupan Imunisasi', progress: 75 },
+                    { id: 3, bundleId: 1, puskesmasId: 2, puskesmasName: 'Puskesmas B', indicatorName: 'Kehadiran', progress: 45 },
+                    { id: 4, bundleId: 1, puskesmasId: 2, puskesmasName: 'Puskesmas B', indicatorName: 'Cakupan Imunisasi', progress: 60 },
+                ],
+                get filteredData() {
+                    return this.data.filter(item => 
+                        (!this.selectedBundle || item.bundleId == this.selectedBundle) &&
+                        (!this.selectedPuskesmas || item.puskesmasId == this.selectedPuskesmas)
+                    );
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/components/_sidebar.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('sidebar-container').innerHTML = data;
+                });
+        });
+    </script>

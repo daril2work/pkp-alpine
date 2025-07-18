@@ -1,0 +1,20 @@
+<div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <template x-for="header in headers" :key="header">
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" x-text="header"></th>
+                </template>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            <template x-for="row in data" :key="row.id">
+                <tr>
+                    <template x-for="header in headers" :key="header">
+                        <td class="px-6 py-4 whitespace-nowrap" x-text="row[header.toLowerCase().replace(' ', '_')]"></td>
+                    </template>
+                </tr>
+            </template>
+        </tbody>
+    </table>
+</div>

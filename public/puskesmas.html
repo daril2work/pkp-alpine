@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PKP Builder - Puskesmas</title>
+<script src="/js/authGuard.js"></script>
+    <link href="styles.css" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div class="flex h-screen" x-data="{ sidebarOpen: true }">
+        <div id="sidebar-container" class="h-screen bg-white shadow-lg transition-all duration-300" :class="{'w-64': sidebarOpen, 'w-20': !sidebarOpen}"></div>
+
+        <div class="flex-1 flex flex-col overflow-y-auto">
+            <div id="header-container"></div>
+
+            <main class="flex-1 p-8" x-data="puskesmasApp()" x-init="init()">
+                <div class="space-y-8">
+                    <template x-for="cluster in bundle.clusters" :key="cluster.id">
+                        <div class="bg-white rounded-lg shadow">
+                            <button @click="openClusters[cluster.id] = !openClusters[cluster.id]" class="w-full flex justify-between items-center p-6 font-bold text-xl">
+                                <span x-text="cluster.name"></span>
+                                <i class="fas" :class="{'fa-chevron-down': !openClusters[cluster.id], 'fa-chevron-up': openClusters[cluster.id]}"></i>
+                            </button>
+                            <div x-show="openClusters[cluster.id]" x-collapse class="p-6 pt-0 space-y-6">
+                                <template x-for="indicator in cluster.indicators" :key="indicator.id">
+                                    <div class="border-t pt-4">
+                                        <h3 class="font-semibold" x-text="indicator.name"></h3>
+                                        <p class="text-sm text-gray-500 mb-2" x-text="indicator.description"></p>
+                                        
+                                        <div class="overflow-x-auto">
+                                            <table class="min-w-full border">
+                                                <thead class="bg-gray-50">
+                                                    <tr>
+                                                        <template x-for="month in months" :key="month.id">
+                                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" x-text="month.name"></th>
+                                                        </template>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="bg-white divide-y divide-gray-200">
+                                                    <tr>
+                                                        <template x-for="month in months" :key="month.id">
+                                                            <td class="px-2 py-1">
+                                                                <input type="number" class="w-full text-center form-input border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                                                    x-model.lazy="progress[indicator.id][month.id]"
+                                                                    @change="saveProgress(indicator.id, month.id)">
+                                                            </td>
+                                                        </template>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <div class="mt-4" style="height: 200px;">
+                                            <canvas :id="'chart-' + indicator.id"></canvas>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // This function needs to be global for Alpine to see it.
+        function puskesmasApp() {
+            return {
+                months: [
+                    { id: 1, name: 'Jan' }, { id: 2, name: 'Feb' }, { id: 3, name: 'Mar' }, { id: 4, name: 'Apr' },
+                    { id: 5, name: 'May' }, { id: 6, name: 'Jun' }, { id: 7, name: 'Jul' }, { id: 8, name: 'Aug' },
+                    { id: 9, name: 'Sep' }, { id: 10, name: 'Oct' }, { id: 11, name: 'Nov' }, { id: 12, name: 'Dec' }
+                ],
+                bundle: {},
+                progress: {},
+                charts: {},
+                openClusters: {},
+                fetchWithAuth: null, // Placeholder for the imported function
+
+                async initData() {
+                    try {
+                        this.bundle = await this.fetchWithAuth('/api/progress/my-bundle');
+
+                        // Initialize progress object and open state for clusters
+                        this.bundle.clusters.forEach(c => {
+                            this.openClusters[c.id] = true; // Default to open
+                            c.indicators.forEach(i => {
+                                this.progress[i.id] = {};
+                            });
+                        });
+
+                        const existingProgress = await this.fetchWithAuth(`/api/progress/my-progress?year=${this.bundle.year}`);
+                        this.progress = { ...this.progress, ...existingProgress };
+
+                        this.$nextTick(() => {
+                            this.bundle.clusters.forEach(cluster => {
+                                cluster.indicators.forEach(indicator => {
+                                    this.createOrUpdateChart(indicator.id);
+                                });
+                            });
+                        });
+
+                    } catch (error) {
+                        console.error(error);
+                        alert(error.message);
+                    }
+                },
+
+                async saveProgress(indicatorId, monthId) {
+                    const value = this.progress[indicatorId][monthId];
+                    try {
+                        await this.fetchWithAuth('/api/progress', {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                indicator_id: indicatorId,
+                                month: monthId,
+                                year: this.bundle.year,
+                                value: value === '' ? null : Number(value)
+                            })
+                        });
+                        this.createOrUpdateChart(indicatorId);
+                    } catch (error) {
+                        console.error(error);
+                        alert(error.message);
+                    }
+                },
+
+                createOrUpdateChart(indicatorId) {
+                    const chartData = this.months.map(m => this.progress[indicatorId]?.[m.id] || 0);
+                    
+                    if (this.charts[indicatorId]) {
+                        this.charts[indicatorId].data.datasets[0].data = chartData;
+                        this.charts[indicatorId].update();
+                    } else {
+                        const ctx = document.getElementById('chart-' + indicatorId)?.getContext('2d');
+                        if (!ctx) return;
+                        this.charts[indicatorId] = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: this.months.map(m => m.name),
+                                datasets: [{
+                                    label: 'Progress',
+                                    data: chartData,
+                                    borderColor: 'rgba(75, 192, 192, 1)',
+                                    borderWidth: 1,
+                                    fill: false,
+                                    tension: 0.1
+                                }]
+                            },
+                            options: {
+                                scales: {
+                                    y: { beginAtZero: true }
+                                },
+                                responsive: true,
+                                maintainAspectRatio: false
+                            }
+                        });
+                    }
+                },
+
+                init() {
+                    // Dynamically import the module and then initialize data
+                    import('/js/api.js').then(({ fetchWithAuth }) => {
+                        this.fetchWithAuth = fetchWithAuth;
+                        this.initData();
+                    }).catch(error => {
+                        console.error("Failed to load API module:", error);
+                        alert("Gagal memuat modul API. Silakan periksa konsol.");
+                    });
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load Sidebar and Header
+            fetch('/components/_sidebar_puskesmas.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('sidebar-container').innerHTML = data;
+                });
+            fetch('/components/_header.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('header-container').innerHTML = data;
+                    document.getElementById('page-title').innerText = 'Laporan Puskesmas';
+                    document.getElementById('page-icon-container').innerHTML = '<i class="fas fa-hospital fa-lg"></i>';
+                });
+        });
+    </script>
+</body>
+</html>

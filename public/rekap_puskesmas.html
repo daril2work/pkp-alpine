@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Puskesmas - PKP Builder</title>
+    <link href="/styles.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module">
+        import { fetchWithAuth } from '/js/api.js';
+
+        function reportApp() {
+            return {
+                bundles: [],
+                selectedBundleId: null,
+                reportData: [],
+                get selectedBundle() {
+                    return this.bundles.find(b => b.id == this.selectedBundleId);
+                },
+                async init() {
+                    // Load sidebar
+                    const sidebarRes = await fetch('/components/_sidebar.html');
+                    document.getElementById('sidebar-container').innerHTML = await sidebarRes.text();
+
+                    await this.fetchBundles();
+                    if (this.bundles.length > 0) {
+                        this.selectedBundleId = this.bundles[0].id;
+                        await this.fetchReportData();
+                    }
+                    // Load report table component
+                    fetch('/components/_report_table.html')
+                        .then(response => response.text())
+                        .then(data => {
+                            document.getElementById('report-table-container').innerHTML = data;
+                        });
+                },
+                async fetchBundles() {
+                    try {
+                        this.bundles = await fetchWithAuth('/api/bundles');
+                    } catch (error) {
+                        console.error(error);
+                        alert('Could not load bundles.');
+                    }
+                },
+                async fetchReportData() {
+                    if (!this.selectedBundleId) return;
+                    try {
+                        this.reportData = await fetchWithAuth(`/api/reports/puskesmas-summary?bundle_id=${this.selectedBundleId}`);
+                    } catch (error) {
+                        console.error(error);
+                        this.reportData = [];
+                        alert('Could not load report data for the selected bundle.');
+                    }
+                }
+            }
+        }
+        window.reportApp = reportApp;
+    </script>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>API Utility Tests</title>
+</head>
+<body>
+    <h1>API Utility Tests</h1>
+    <div id="results"></div>
+
+    <script type="module">
+        import { fetchWithAuth } from '/js/api.js';
+
+        const resultsDiv = document.getElementById('results');
+        let testsPassed = 0;
+        let testsFailed = 0;
+
+        function assert(condition, message) {
+            const p = document.createElement('p');
+            if (condition) {
+                p.style.color = 'green';
+                p.textContent = `PASS: ${message}`;
+                testsPassed++;
+            } else {
+                p.style.color = 'red';
+                p.textContent = `FAIL: ${message}`;
+                testsFailed++;
+            }
+            resultsDiv.appendChild(p);
+        }
+
+        async function runTests() {
+            // Test 1: Should redirect if no token is present
+            localStorage.removeItem('pkp_token');
+            try {
+                await fetchWithAuth('/api/users');
+                assert(false, 'fetchWithAuth should have thrown an error without a token.');
+            } catch (e) {
+                assert(e.message.includes('No auth token found'), 'fetchWithAuth threw the correct error without a token.');
+            }
+
+            // Test 2: Should make a request with a token
+            localStorage.setItem('pkp_token', 'fake-token');
+            // This will fail because the token is fake, but it proves the function tries to fetch
+            try {
+                await fetchWithAuth('/api/users');
+                 assert(false, 'fetchWithAuth should have failed with a fake token.');
+            } catch (e) {
+                 assert(e.message.includes('Unauthorized'), 'fetchWithAuth failed as expected with a fake token.');
+            }
+
+
+            console.log(`Tests complete: ${testsPassed} passed, ${testsFailed} failed.`);
+        }
+
+        runTests();
+    </script>
+</body>
+</html>
